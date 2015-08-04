@@ -12,6 +12,9 @@ CXXFLAGS = -Wall -std=c++98 -O2 -I$(LUA_DIR) -fPIC -shared
 # libraries used by the tests
 all: lib1.so lib11.so lib2.so lib21.so lib2-v2.so
 
+clean:
+	rm *.so
+
 lib1.so: lib1.cc
 	$(CXX) $(CXXFLAGS) -o lib1.so lib1.cc
 
