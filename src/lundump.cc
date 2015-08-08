@@ -50,7 +50,7 @@ static l_noret error(LoadState *S, const char *why) {
 #define LoadVector(S,b,n)	LoadBlock(S,b,(n)*sizeof((b)[0]))
 
 static void LoadBlock (LoadState *S, void *b, size_t size) {
-  if (luaZ_read(S->Z, b, size) != 0)
+  if (S->Z->read(b, size) != 0)
     error(S, "truncated");
 }
 
@@ -93,7 +93,7 @@ static TString *LoadString (LoadState *S) {
   if (size == 0)
     return NULL;
   else {
-    char *s = luaZ_openspace(S->L, S->b, --size);
+    char *s = S->b->openspace(S->L, --size);
     LoadVector(S, s, size);
     return luaS_newlstr(S->L, s, size);
   }

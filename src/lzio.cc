@@ -76,13 +76,3 @@ size_t ZIO::read (void *b, size_t n) {
   return 0;
 }
 
-/* ------------------------------------------------------------------------ */
-char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {
-  if (n > buff->size()) {
-    if (n < LUA_MINBUFFER) n = LUA_MINBUFFER;
-    buff->resize(L, n);
-  }
-  return buff->buffer();
-}
-
-

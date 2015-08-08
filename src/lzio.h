@@ -36,6 +36,13 @@ class Mbuffer {
   }
   inline void add (char c) {m_buffer[m_n++] = c;}
   inline void free(lua_State* L) {resize(L, 0);}
+  inline char *openspace(lua_State *L, size_t n) {
+    if (n > size()) {
+      if (n < LUA_MINBUFFER) n = LUA_MINBUFFER;
+      resize(L, n);
+    }
+    return m_buffer;
+  }
 };
 
 
@@ -54,14 +61,5 @@ class ZIO {
   int fill(void);
   inline int getc(void) {return (m_n--)>0 ?  cast_uchar(*m_p++) : fill();}
 };
-
-LUAI_FUNC char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n);
-LUAI_FUNC void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader,
-                                        void *data);
-LUAI_FUNC size_t luaZ_read (ZIO* z, void *b, size_t n);	/* read next n bytes */
-
-
-
-LUAI_FUNC int luaZ_fill (ZIO *z);
 
 #endif
