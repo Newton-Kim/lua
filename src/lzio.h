@@ -15,8 +15,6 @@
 
 #define EOZ	(-1)			/* end of stream */
 
-#define zgetc(z)  ((z)->getc())
-
 
 class Mbuffer {
  private:

@@ -29,7 +29,7 @@
 
 
 
-#define next(ls) (ls->current = zgetc(ls->z))
+#define next(ls) (ls->current = (ls->z->getc()))
 
 
 
