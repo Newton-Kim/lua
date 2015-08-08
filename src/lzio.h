@@ -20,28 +20,39 @@ typedef struct Zio ZIO;
 #define zgetc(z)  (((z)->n--)>0 ?  cast_uchar(*(z)->p++) : luaZ_fill(z))
 
 
-typedef struct Mbuffer {
-  char *buffer;
-  size_t n;
-  size_t buffsize;
-} Mbuffer;
+class Mbuffer {
+ private:
+  char *m_buffer;
+  size_t m_n;
+  size_t m_buffsize;
+ public:
+  inline void init(void) {m_buffer = NULL; m_buffsize = 0;}
+  inline char *buffer(void) {return m_buffer;}
+  inline size_t size(void) {return m_buffsize;}
+  inline size_t len(void) {return m_n;}
+  inline void remove(size_t i) {m_n -= i;}
+  inline void reset(void) {m_n = 0;}
+  inline void resize(lua_State* L, size_t size) {
+	m_buffer = luaM_reallocvchar(L, m_buffer, m_buffsize, size);
+	m_buffsize = size;
+  }
+  inline void add (char c) {m_buffer[m_n++] = c;}
+  inline void free(lua_State* L) {resize(L, 0);}
+};
 
-#define luaZ_initbuffer(L, buff) ((buff)->buffer = NULL, (buff)->buffsize = 0)
+#define luaZ_initbuffer(L, buff) ((buff)->init())
 
-#define luaZ_buffer(buff)	((buff)->buffer)
-#define luaZ_sizebuffer(buff)	((buff)->buffsize)
-#define luaZ_bufflen(buff)	((buff)->n)
+#define luaZ_buffer(buff)	((buff)->buffer())
+#define luaZ_sizebuffer(buff)	((buff)->size())
+#define luaZ_bufflen(buff)	((buff)->len())
 
-#define luaZ_buffremove(buff,i)	((buff)->n -= (i))
-#define luaZ_resetbuffer(buff) ((buff)->n = 0)
+#define luaZ_buffremove(buff,i)	((buff)->remove(i))
+#define luaZ_resetbuffer(buff) ((buff)->reset())
 
 
-#define luaZ_resizebuffer(L, buff, size) \
-	((buff)->buffer = luaM_reallocvchar(L, (buff)->buffer, \
-				(buff)->buffsize, size), \
-	(buff)->buffsize = size)
+#define luaZ_resizebuffer(L, buff, size) ((buff)->resize(L, size))
 
-#define luaZ_freebuffer(L, buff)	luaZ_resizebuffer(L, buff, 0)
+#define luaZ_freebuffer(L, buff)	((buff)->free(L))
 
 
 LUAI_FUNC char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n);
