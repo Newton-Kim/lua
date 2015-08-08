@@ -15,9 +15,7 @@
 
 #define EOZ	(-1)			/* end of stream */
 
-typedef struct Zio ZIO;
-
-#define zgetc(z)  (((z)->n--)>0 ?  cast_uchar(*(z)->p++) : luaZ_fill(z))
+#define zgetc(z)  ((z)->getc())
 
 
 class Mbuffer {
@@ -40,22 +38,28 @@ class Mbuffer {
   inline void free(lua_State* L) {resize(L, 0);}
 };
 
+
+/* --------- Private Part ------------------ */
+
+class ZIO {
+ private:
+  size_t m_n;			/* bytes still unread */
+  const char *m_p;		/* current position in buffer */
+  lua_Reader m_reader;		/* reader function */
+  void *m_data;			/* additional data */
+  lua_State *m_L;		/* Lua state (for reader) */
+ public:
+  void init(lua_State *L, lua_Reader reader, void *data);
+  size_t read(void *b, size_t n);
+  int fill(void);
+  inline int getc(void) {return (m_n--)>0 ?  cast_uchar(*m_p++) : fill();}
+};
+
 LUAI_FUNC char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n);
 LUAI_FUNC void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader,
                                         void *data);
 LUAI_FUNC size_t luaZ_read (ZIO* z, void *b, size_t n);	/* read next n bytes */
 
-
-
-/* --------- Private Part ------------------ */
-
-struct Zio {
-  size_t n;			/* bytes still unread */
-  const char *p;		/* current position in buffer */
-  lua_Reader reader;		/* reader function */
-  void *data;			/* additional data */
-  lua_State *L;			/* Lua state (for reader) */
-};
 
 
 LUAI_FUNC int luaZ_fill (ZIO *z);
