@@ -967,11 +967,10 @@ LUA_API int lua_pcallk (lua_State *L, int nargs, int nresults, int errfunc,
 
 LUA_API int lua_load (lua_State *L, lua_Reader reader, void *data,
                       const char *chunkname, const char *mode) {
-  ZIO z;
   int status;
   lua_lock(L);
   if (!chunkname) chunkname = "?";
-  z.init(L, reader, data);
+  ZIO z(L, reader, data);
   status = luaD_protectedparser(L, &z, chunkname, mode);
   if (status == LUA_OK) {  /* no errors? */
     LClosure *f = clLvalue(L->top - 1);  /* get newly created function */

@@ -37,11 +37,7 @@ int ZIO::fill (void) {
   return cast_uchar(*(m_p++));
 }
 
-
-void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader, void *data) {
-  z->init(L, reader, data);
-}
-void ZIO::init (lua_State *L, lua_Reader reader, void *data) {
+ZIO::ZIO (lua_State *L, lua_Reader reader, void *data) {
   m_L = L;
   m_reader = reader;
   m_data = data;
@@ -51,9 +47,6 @@ void ZIO::init (lua_State *L, lua_Reader reader, void *data) {
 
 
 /* --------------------------------------------------------------- read --- */
-size_t luaZ_read (ZIO *z, void *b, size_t n) {
-  return z->read(b, n);
-}
 
 size_t ZIO::read (void *b, size_t n) {
   while (n) {

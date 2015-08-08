@@ -54,7 +54,7 @@ class ZIO {
   void *m_data;			/* additional data */
   lua_State *m_L;		/* Lua state (for reader) */
  public:
-  void init(lua_State *L, lua_Reader reader, void *data);
+  ZIO(lua_State *L, lua_Reader reader, void *data);
   size_t read(void *b, size_t n);
   int fill(void);
   inline int getc(void) {return (m_n--)>0 ?  cast_uchar(*m_p++) : fill();}
