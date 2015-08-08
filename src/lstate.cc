@@ -237,7 +237,7 @@ static void close_state (lua_State *L) {
   if (g->version)  /* closing a fully built state? */
     luai_userstateclose(L);
   luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size);
-  luaZ_freebuffer(L, &g->buff);
+  g->buff.free(L);
   freestack(L);
   lua_assert(gettotalbytes(g) == sizeof(LG));
   (*g->frealloc)(g->ud, fromstate(L), sizeof(LG), 0);  /* free main block */
@@ -306,7 +306,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->strt.size = g->strt.nuse = 0;
   g->strt.hash = NULL;
   setnilvalue(&g->l_registry);
-  luaZ_initbuffer(L, &g->buff);
+  g->buff.init();
   g->panic = NULL;
   g->version = NULL;
   g->gcstate = GCSpause;

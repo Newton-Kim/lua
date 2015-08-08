@@ -774,7 +774,7 @@ static GCObject **sweeptolive (lua_State *L, GCObject **p, int *n) {
 static void checkSizes (lua_State *L, global_State *g) {
   if (g->gckind != KGC_EMERGENCY) {
     l_mem olddebt = g->GCdebt;
-    luaZ_freebuffer(L, &g->buff);  /* free concatenation buffer */
+    g->buff.free(L);  /* free concatenation buffer */
     if (g->strt.nuse < g->strt.size / 4)  /* string table too big? */
       luaS_resize(L, g->strt.size / 2);  /* shrink it a little */
     g->GCestimate += g->GCdebt - olddebt;  /* update estimate */

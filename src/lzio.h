@@ -40,21 +40,6 @@ class Mbuffer {
   inline void free(lua_State* L) {resize(L, 0);}
 };
 
-#define luaZ_initbuffer(L, buff) ((buff)->init())
-
-#define luaZ_buffer(buff)	((buff)->buffer())
-#define luaZ_sizebuffer(buff)	((buff)->size())
-#define luaZ_bufflen(buff)	((buff)->len())
-
-#define luaZ_buffremove(buff,i)	((buff)->remove(i))
-#define luaZ_resetbuffer(buff) ((buff)->reset())
-
-
-#define luaZ_resizebuffer(L, buff, size) ((buff)->resize(L, size))
-
-#define luaZ_freebuffer(L, buff)	((buff)->free(L))
-
-
 LUAI_FUNC char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n);
 LUAI_FUNC void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader,
                                         void *data);
