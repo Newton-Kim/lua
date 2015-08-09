@@ -153,7 +153,7 @@ void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
   L = a_L;
   m_current = a_firstchar;
   m_lookahead.token = TK_EOS;  /* no look-ahead token */
-  m_z = a_z; /*TODO:unused variable*/
+  m_z = a_z;
   fs = NULL;
   linenumber = 1;
   lastline = 1;
