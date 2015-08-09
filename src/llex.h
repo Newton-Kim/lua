@@ -67,8 +67,10 @@ class LexState {
  public:
   struct FuncState *fs;  /* current function (parser) */
   struct lua_State *L;
-  ZIO *z;  /* input stream */
-  Mbuffer *buff;  /* buffer for tokens */
+ private:
+  ZIO *m_z;  /* input stream */
+  Mbuffer *m_buff;  /* buffer for tokens */
+ public:
   Table *h;  /* to avoid collection/reuse strings */
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
   TString *source;  /* current source name */
@@ -77,7 +79,7 @@ class LexState {
   char m_decpoint;  /* locale decimal point */
 
  private:
-  inline void next (void) {m_current = z->getc();}
+  inline void next (void) {m_current = m_z->getc();}
   inline bool currIsNewline(void) {return m_current == '\n' || m_current == '\r';}
   inline void save_and_next(void) {save(m_current); next();}
   l_noret error (const char *msg, int token);
@@ -100,6 +102,7 @@ class LexState {
   void buffreplace (char from, char to);
   int check_next2 (const char *set);
  public:
+  LexState(Mbuffer *buff);
   void setinput (lua_State *L, ZIO *z, TString *source,
                       int firstchar);
   TString *newstring (const char *str, size_t l);

@@ -42,7 +42,7 @@ static const char *const luaX_tokens [] = {
 
 
 void LexState::save (int c) {
-  Mbuffer *b = buff;
+  Mbuffer *b = m_buff;
   if (b->len() + 1 > b->size()) {
     size_t newsize;
     if (b->size() >= MAX_SIZE/2)
@@ -86,7 +86,7 @@ const char *LexState::txtToken (int token) {
     case TK_NAME: case TK_STRING:
     case TK_FLT: case TK_INT:
       save('\0');
-      return luaO_pushfstring(L, "'%s'", buff->buffer());
+      return luaO_pushfstring(L, "'%s'", m_buff->buffer());
     default:
       return token2str(token);
   }
@@ -144,6 +144,7 @@ void LexState::inclinenumber (void) {
     error("chunk has too many lines", 0);
 }
 
+LexState::LexState(Mbuffer *buff):m_buff(buff) {}
 
 void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
                     int a_firstchar) {
@@ -152,13 +153,13 @@ void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
   L = a_L;
   m_current = a_firstchar;
   m_lookahead.token = TK_EOS;  /* no look-ahead token */
-  z = a_z;
+  m_z = a_z; /*TODO:unused variable*/
   fs = NULL;
   linenumber = 1;
   lastline = 1;
   source = a_source;
   envn = luaS_newliteral(L, LUA_ENV);  /* get env name */
-  buff->resize(L, LUA_MINBUFFER);  /* initialize buffer */
+  m_buff->resize(L, LUA_MINBUFFER);  /* initialize buffer */
 }
 
 
@@ -198,8 +199,8 @@ int LexState::check_next2 (const char *set) {
 */
 void LexState::buffreplace (char from, char to) {
   if (from != to) {
-    size_t n = buff->len();
-    char *p = buff->buffer();
+    size_t n = m_buff->len();
+    char *p = m_buff->buffer();
     while (n--)
       if (p[n] == from) p[n] = to;
   }
@@ -216,7 +217,7 @@ void LexState::trydecpoint (TValue *o) {
   char old = m_decpoint;
   m_decpoint = lua_getlocaledecpoint();
   buffreplace(old, m_decpoint);  /* try new decimal separator */
-  if (!buff2num(buff, o)) {
+  if (!buff2num(m_buff, o)) {
     /* format error with correct decimal point: no more options */
     buffreplace(m_decpoint, '.');  /* undo change (for error message) */
     error("malformed number", TK_FLT);
@@ -248,7 +249,7 @@ int LexState::read_numeral (SemInfo *seminfo) {
   }
   save('\0');
   buffreplace('.', m_decpoint);  /* follow locale for decimal point */
-  if (!buff2num(buff, &obj))  /* format error? */
+  if (!buff2num(m_buff, &obj))  /* format error? */
     trydecpoint(&obj); /* try to update decimal point separator */
   if (ttisinteger(&obj)) {
     seminfo->i = ivalue(&obj);
@@ -304,7 +305,7 @@ void LexState::read_long_string (SemInfo *seminfo, int sep) {
       case '\n': case '\r': {
         save('\n');
         inclinenumber();
-        if (!seminfo) buff->reset();  /* avoid wasting space */
+        if (!seminfo) m_buff->reset();  /* avoid wasting space */
         break;
       }
       default: {
@@ -314,8 +315,8 @@ void LexState::read_long_string (SemInfo *seminfo, int sep) {
     }
   } endloop:
   if (seminfo)
-    seminfo->ts = newstring(buff->buffer() + (2 + sep),
-                            buff->len() - 2*(2 + sep));
+    seminfo->ts = newstring(m_buff->buffer() + (2 + sep),
+                            m_buff->len() - 2*(2 + sep));
 }
 
 
@@ -338,7 +339,7 @@ int LexState::gethexa (void) {
 int LexState::readhexaesc (void) {
   int r = gethexa();
   r = (r << 4) + gethexa();
-  buff->remove(2);  /* remove saved chars from buffer */
+  m_buff->remove(2);  /* remove saved chars from buffer */
   return r;
 }
 
@@ -356,7 +357,7 @@ unsigned long LexState::readutf8esc (void) {
   }
   esccheck(m_current == '}', "missing '}'");
   next();  /* skip '}' */
-  buff->remove(i);  /* remove saved chars from buffer */
+  m_buff->remove(i);  /* remove saved chars from buffer */
   return r;
 }
 
@@ -377,7 +378,7 @@ int LexState::readdecesc (void) {
     save_and_next();
   }
   esccheck(r <= UCHAR_MAX, "decimal escape too large");
-  buff->remove(i);  /* remove read digits from buffer */
+  m_buff->remove(i);  /* remove read digits from buffer */
   return r;
 }
 
@@ -412,7 +413,7 @@ void LexState::read_string (int del, SemInfo *seminfo) {
             c = m_current; goto read_save;
           case EOZ: goto no_save;  /* will raise an error next loop */
           case 'z': {  /* zap following span of spaces */
-            buff->remove(1);  /* remove '\\' */
+            m_buff->remove(1);  /* remove '\\' */
             next();  /* skip the 'z' */
             while (lisspace(m_current)) {
               if (currIsNewline()) inclinenumber();
@@ -430,7 +431,7 @@ void LexState::read_string (int del, SemInfo *seminfo) {
          next();
          /* go through */
        only_save:
-         buff->remove(1);  /* remove '\\' */
+         m_buff->remove(1);  /* remove '\\' */
          save(c);
          /* go through */
        no_save: break;
@@ -440,12 +441,12 @@ void LexState::read_string (int del, SemInfo *seminfo) {
     }
   }
   save_and_next();  /* skip delimiter */
-  seminfo->ts = newstring(buff->buffer() + 1, buff->len() - 2);
+  seminfo->ts = newstring(m_buff->buffer() + 1, m_buff->len() - 2);
 }
 
 
 int LexState::llex (SemInfo *seminfo) {
-  buff->reset();
+  m_buff->reset();
   for (;;) {
     switch (m_current) {
       case '\n': case '\r': {  /* line breaks */
@@ -463,10 +464,10 @@ int LexState::llex (SemInfo *seminfo) {
         next();
         if (m_current == '[') {  /* long comment? */
           int sep = skip_sep();
-          buff->reset();  /* 'skip_sep' may dirty the buffer */
+          m_buff->reset();  /* 'skip_sep' may dirty the buffer */
           if (sep >= 0) {
             read_long_string(NULL, sep);  /* skip long comment */
-            buff->reset();  /* previous call may dirty the buff. */
+            m_buff->reset();  /* previous call may dirty the buff. */
             break;
           }
         }
@@ -544,7 +545,7 @@ int LexState::llex (SemInfo *seminfo) {
           do {
             save_and_next();
           } while (lislalnum(m_current));
-          ts = newstring(buff->buffer(), buff->len());
+          ts = newstring(m_buff->buffer(), m_buff->len());
           seminfo->ts = ts;
           if (isreserved(ts))  /* reserved word? */
             return ts->extra - 1 + FIRST_RESERVED;
