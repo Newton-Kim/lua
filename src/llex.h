@@ -56,8 +56,9 @@ typedef struct Token {
 /* state of the lexer plus state of the parser when shared by all
    functions */
 class LexState {
+ private:
+  int m_current;  /* current character (charint) */
  public:
-  int current;  /* current character (charint) */
   int linenumber;  /* input line counter */
   int lastline;  /* line of last token 'consumed' */
   Token t;  /* current token */
@@ -76,9 +77,9 @@ class LexState {
   char m_decpoint;  /* locale decimal point */
 
  private:
-  inline void next (void) {current = z->getc();}
-  inline bool currIsNewline(void) {return current == '\n' || current == '\r';}
-  inline void save_and_next(void) {save(current); next();}
+  inline void next (void) {m_current = z->getc();}
+  inline bool currIsNewline(void) {return m_current == '\n' || m_current == '\r';}
+  inline void save_and_next(void) {save(m_current); next();}
   l_noret error (const char *msg, int token);
   void save (int c);
   const char *txtToken (int token);

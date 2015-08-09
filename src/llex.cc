@@ -135,10 +135,10 @@ TString *LexState::newstring (const char *str, size_t l) {
 ** \n, \r, \n\r, or \r\n)
 */
 void LexState::inclinenumber (void) {
-  int old = current;
+  int old = m_current;
   lua_assert(currIsNewline());
   next();  /* skip '\n' or '\r' */
-  if (currIsNewline() && current != old)
+  if (currIsNewline() && m_current != old)
     next();  /* skip '\n\r' or '\r\n' */
   if (++linenumber >= MAX_INT)
     error("chunk has too many lines", 0);
@@ -150,7 +150,7 @@ void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
   t.token = 0;
   m_decpoint = '.';
   L = a_L;
-  current = a_firstchar;
+  m_current = a_firstchar;
   m_lookahead.token = TK_EOS;  /* no look-ahead token */
   z = a_z;
   fs = NULL;
@@ -171,7 +171,7 @@ void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
 
 
 int LexState::check_next1 (int c) {
-  if (current == c) {
+  if (m_current == c) {
     next();
     return 1;
   }
@@ -185,7 +185,7 @@ int LexState::check_next1 (int c) {
 */
 int LexState::check_next2 (const char *set) {
   lua_assert(set[2] == '\0');
-  if (current == set[0] || current == set[1]) {
+  if (m_current == set[0] || m_current == set[1]) {
     save_and_next();
     return 1;
   }
@@ -232,17 +232,17 @@ void LexState::trydecpoint (TValue *o) {
 int LexState::read_numeral (SemInfo *seminfo) {
   TValue obj;
   const char *expo = "Ee";
-  int first = current;
-  lua_assert(lisdigit(current));
+  int first = m_current;
+  lua_assert(lisdigit(m_current));
   save_and_next();
   if (first == '0' && check_next2("xX"))  /* hexadecimal? */
     expo = "Pp";
   for (;;) {
     if (check_next2(expo))  /* exponent part? */
       check_next2("-+");  /* optional exponent sign */
-    if (lisxdigit(current))
+    if (lisxdigit(m_current))
       save_and_next();
-    else if (current == '.')
+    else if (m_current == '.')
       save_and_next();
     else break;
   }
@@ -269,14 +269,14 @@ int LexState::read_numeral (SemInfo *seminfo) {
 */
 int LexState::skip_sep (void) {
   int count = 0;
-  int s = current;
+  int s = m_current;
   lua_assert(s == '[' || s == ']');
   save_and_next();
-  while (current == '=') {
+  while (m_current == '=') {
     save_and_next();
     count++;
   }
-  return (current == s) ? count : (-count) - 1;
+  return (m_current == s) ? count : (-count) - 1;
 }
 
 
@@ -286,7 +286,7 @@ void LexState::read_long_string (SemInfo *seminfo, int sep) {
   if (currIsNewline())  /* string starts with a newline? */
     inclinenumber();  /* skip it */
   for (;;) {
-    switch (current) {
+    switch (m_current) {
       case EOZ: {  /* error */
         const char *what = (seminfo ? "string" : "comment");
         const char *msg = luaO_pushfstring(L,
@@ -321,7 +321,7 @@ void LexState::read_long_string (SemInfo *seminfo, int sep) {
 
 void LexState::esccheck (int c, const char *msg) {
   if (!c) {
-    if (current != EOZ)
+    if (m_current != EOZ)
       save_and_next();  /* add current to buffer for error message */
     error(msg, TK_STRING);
   }
@@ -330,8 +330,8 @@ void LexState::esccheck (int c, const char *msg) {
 
 int LexState::gethexa (void) {
   save_and_next();
-  esccheck (lisxdigit(current), "hexadecimal digit expected");
-  return luaO_hexavalue(current);
+  esccheck (lisxdigit(m_current), "hexadecimal digit expected");
+  return luaO_hexavalue(m_current);
 }
 
 
@@ -347,14 +347,14 @@ unsigned long LexState::readutf8esc (void) {
   unsigned long r;
   int i = 4;  /* chars to be removed: '\', 'u', '{', and first digit */
   save_and_next();  /* skip 'u' */
-  esccheck(current == '{', "missing '{'");
+  esccheck(m_current == '{', "missing '{'");
   r = gethexa();  /* must have at least one digit */
-  while ((save_and_next(), lisxdigit(current))) {
+  while ((save_and_next(), lisxdigit(m_current))) {
     i++;
-    r = (r << 4) + luaO_hexavalue(current);
+    r = (r << 4) + luaO_hexavalue(m_current);
     esccheck(r <= 0x10FFFF, "UTF-8 value too large");
   }
-  esccheck(current == '}', "missing '}'");
+  esccheck(m_current == '}', "missing '}'");
   next();  /* skip '}' */
   buff->remove(i);  /* remove saved chars from buffer */
   return r;
@@ -372,8 +372,8 @@ void LexState::utf8esc (void) {
 int LexState::readdecesc (void) {
   int i;
   int r = 0;  /* result accumulator */
-  for (i = 0; i < 3 && lisdigit(current); i++) {  /* read up to 3 digits */
-    r = 10*r + current - '0';
+  for (i = 0; i < 3 && lisdigit(m_current); i++) {  /* read up to 3 digits */
+    r = 10*r + m_current - '0';
     save_and_next();
   }
   esccheck(r <= UCHAR_MAX, "decimal escape too large");
@@ -384,8 +384,8 @@ int LexState::readdecesc (void) {
 
 void LexState::read_string (int del, SemInfo *seminfo) {
   save_and_next();  /* keep delimiter (for error messages) */
-  while (current != del) {
-    switch (current) {
+  while (m_current != del) {
+    switch (m_current) {
       case EOZ:
         error("unfinished string", TK_EOS);
         break;  /* to avoid warnings */
@@ -396,7 +396,7 @@ void LexState::read_string (int del, SemInfo *seminfo) {
       case '\\': {  /* escape sequences */
         int c;  /* final character to be saved */
         save_and_next();  /* keep '\\' for error messages */
-        switch (current) {
+        switch (m_current) {
           case 'a': c = '\a'; goto read_save;
           case 'b': c = '\b'; goto read_save;
           case 'f': c = '\f'; goto read_save;
@@ -409,19 +409,19 @@ void LexState::read_string (int del, SemInfo *seminfo) {
           case '\n': case '\r':
             inclinenumber(); c = '\n'; goto only_save;
           case '\\': case '\"': case '\'':
-            c = current; goto read_save;
+            c = m_current; goto read_save;
           case EOZ: goto no_save;  /* will raise an error next loop */
           case 'z': {  /* zap following span of spaces */
             buff->remove(1);  /* remove '\\' */
             next();  /* skip the 'z' */
-            while (lisspace(current)) {
+            while (lisspace(m_current)) {
               if (currIsNewline()) inclinenumber();
               else next();
             }
             goto no_save;
           }
           default: {
-            esccheck(lisdigit(current), "invalid escape sequence");
+            esccheck(lisdigit(m_current), "invalid escape sequence");
             c = readdecesc();  /* digital escape '\ddd' */
             goto only_save;
           }
@@ -447,7 +447,7 @@ void LexState::read_string (int del, SemInfo *seminfo) {
 int LexState::llex (SemInfo *seminfo) {
   buff->reset();
   for (;;) {
-    switch (current) {
+    switch (m_current) {
       case '\n': case '\r': {  /* line breaks */
         inclinenumber();
         break;
@@ -458,10 +458,10 @@ int LexState::llex (SemInfo *seminfo) {
       }
       case '-': {  /* '-' or '--' (comment) */
         next();
-        if (current != '-') return '-';
+        if (m_current != '-') return '-';
         /* else is a comment */
         next();
-        if (current == '[') {  /* long comment? */
+        if (m_current == '[') {  /* long comment? */
           int sep = skip_sep();
           buff->reset();  /* 'skip_sep' may dirty the buffer */
           if (sep >= 0) {
@@ -471,7 +471,7 @@ int LexState::llex (SemInfo *seminfo) {
           }
         }
         /* else short comment */
-        while (!currIsNewline() && current != EOZ)
+        while (!currIsNewline() && m_current != EOZ)
           next();  /* skip until end of line (or end of file) */
         break;
       }
@@ -518,7 +518,7 @@ int LexState::llex (SemInfo *seminfo) {
         else return ':';
       }
       case '"': case '\'': {  /* short literal strings */
-        read_string(current, seminfo);
+        read_string(m_current, seminfo);
         return TK_STRING;
       }
       case '.': {  /* '.', '..', '...', or number */
@@ -528,7 +528,7 @@ int LexState::llex (SemInfo *seminfo) {
             return TK_DOTS;   /* '...' */
           else return TK_CONCAT;   /* '..' */
         }
-        else if (!lisdigit(current)) return '.';
+        else if (!lisdigit(m_current)) return '.';
         else return read_numeral(seminfo);
       }
       case '0': case '1': case '2': case '3': case '4':
@@ -539,11 +539,11 @@ int LexState::llex (SemInfo *seminfo) {
         return TK_EOS;
       }
       default: {
-        if (lislalpha(current)) {  /* identifier or reserved word? */
+        if (lislalpha(m_current)) {  /* identifier or reserved word? */
           TString *ts;
           do {
             save_and_next();
-          } while (lislalnum(current));
+          } while (lislalnum(m_current));
           ts = newstring(buff->buffer(), buff->len());
           seminfo->ts = ts;
           if (isreserved(ts))  /* reserved word? */
@@ -553,7 +553,7 @@ int LexState::llex (SemInfo *seminfo) {
           }
         }
         else {  /* single-char tokens (+ - / ...) */
-          int c = current;
+          int c = m_current;
           next();
           return c;
         }
