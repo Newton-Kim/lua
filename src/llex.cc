@@ -66,10 +66,6 @@ void luaX_init (lua_State *L) {
 }
 
 
-const char *luaX_token2str (LexState *ls, int token) {
-  return ls->token2str(token);
-}
-
 const char *LexState::token2str (int token) {
   if (token < FIRST_RESERVED) {  /* single-byte symbols? */
     lua_assert(token == cast_uchar(token));
@@ -105,10 +101,6 @@ l_noret LexState::error (const char *msg, int token) {
 }
 
 
-l_noret luaX_syntaxerror (LexState *ls, const char *msg) {
-  ls->syntaxerror(msg);
-}
-
 l_noret LexState::syntaxerror (const char *msg) {
   error(msg, t.token);
 }
@@ -119,10 +111,6 @@ l_noret LexState::syntaxerror (const char *msg) {
 ** it will not be collected until the end of the compilation
 ** (by that time it should be anchored somewhere)
 */
-TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
-  return ls->newstring(str, l);
-}
-
 TString *LexState::newstring (const char *str, size_t l) {
   TValue *o;  /* entry for 'str' */
   TString *ts = luaS_newlstr(L, str, l);  /* create new string */
@@ -156,11 +144,6 @@ void LexState::inclinenumber (void) {
     error("chunk has too many lines", 0);
 }
 
-
-void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source,
-                    int firstchar) {
-  ls->setinput(L, z, source, firstchar);
-}
 
 void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
                     int a_firstchar) {
@@ -580,10 +563,6 @@ int LexState::llex (SemInfo *seminfo) {
 }
 
 
-void luaX_next (LexState *ls) {
-  ls->nextt();
-}
-
 void LexState::nextt (void) {
   lastline = linenumber;
   if (m_lookahead.token != TK_EOS) {  /* is there a look-ahead token? */
@@ -594,10 +573,6 @@ void LexState::nextt (void) {
     t.token = llex(&t.seminfo);  /* read next token */
 }
 
-
-int luaX_lookahead (LexState *ls) {
-  return ls->lookahead();
-}
 
 int LexState::lookahead (void) {
   lua_assert(m_lookahead.token == TK_EOS);
