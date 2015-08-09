@@ -148,7 +148,7 @@ void LexState::inclinenumber (void) {
 void LexState::setinput (lua_State *a_L, ZIO *a_z, TString *a_source,
                     int a_firstchar) {
   t.token = 0;
-  decpoint = '.';
+  m_decpoint = '.';
   L = a_L;
   current = a_firstchar;
   m_lookahead.token = TK_EOS;  /* no look-ahead token */
@@ -213,12 +213,12 @@ void LexState::buffreplace (char from, char to) {
 ** the one defined in the current locale and check again
 */
 void LexState::trydecpoint (TValue *o) {
-  char old = decpoint;
-  decpoint = lua_getlocaledecpoint();
-  buffreplace(old, decpoint);  /* try new decimal separator */
+  char old = m_decpoint;
+  m_decpoint = lua_getlocaledecpoint();
+  buffreplace(old, m_decpoint);  /* try new decimal separator */
   if (!buff2num(buff, o)) {
     /* format error with correct decimal point: no more options */
-    buffreplace(decpoint, '.');  /* undo change (for error message) */
+    buffreplace(m_decpoint, '.');  /* undo change (for error message) */
     error("malformed number", TK_FLT);
   }
 }
@@ -247,7 +247,7 @@ int LexState::read_numeral (SemInfo *seminfo) {
     else break;
   }
   save('\0');
-  buffreplace('.', decpoint);  /* follow locale for decimal point */
+  buffreplace('.', m_decpoint);  /* follow locale for decimal point */
   if (!buff2num(buff, &obj))  /* format error? */
     trydecpoint(&obj); /* try to update decimal point separator */
   if (ttisinteger(&obj)) {

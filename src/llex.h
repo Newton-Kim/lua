@@ -72,7 +72,8 @@ class LexState {
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
   TString *source;  /* current source name */
   TString *envn;  /* environment variable name */
-  char decpoint;  /* locale decimal point */
+ private:
+  char m_decpoint;  /* locale decimal point */
 
  private:
   inline void next (void) {current = z->getc();}
