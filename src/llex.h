@@ -55,12 +55,15 @@ typedef struct Token {
 
 /* state of the lexer plus state of the parser when shared by all
    functions */
-typedef struct LexState {
+class LexState {
+ public:
   int current;  /* current character (charint) */
   int linenumber;  /* input line counter */
   int lastline;  /* line of last token 'consumed' */
   Token t;  /* current token */
-  Token lookahead;  /* look ahead token */
+ private:
+  Token m_lookahead;  /* look ahead token */
+ public:
   struct FuncState *fs;  /* current function (parser) */
   struct lua_State *L;
   ZIO *z;  /* input stream */
@@ -70,7 +73,39 @@ typedef struct LexState {
   TString *source;  /* current source name */
   TString *envn;  /* environment variable name */
   char decpoint;  /* locale decimal point */
-} LexState;
+
+ private:
+  inline void next (void) {current = z->getc();}
+  inline bool currIsNewline(void) {return current == '\n' || current == '\r';}
+  inline void save_and_next(void) {save(current); next();}
+  l_noret error (const char *msg, int token);
+  void save (int c);
+  const char *txtToken (int token);
+  int llex (SemInfo *seminfo);
+  int read_numeral (SemInfo *seminfo);
+  int check_next1 (int c);
+  void read_string (int del, SemInfo *seminfo);
+  int skip_sep (void);
+  void read_long_string (SemInfo *seminfo, int sep);
+  void inclinenumber (void);
+  int readdecesc (void);
+  void esccheck (int c, const char *msg);
+  void utf8esc (void);
+  int readhexaesc (void);
+  unsigned long readutf8esc (void);
+  int gethexa (void);
+  void trydecpoint (TValue *o);
+  void buffreplace (char from, char to);
+  int check_next2 (const char *set);
+ public:
+  void setinput (lua_State *L, ZIO *z, TString *source,
+                      int firstchar);
+  TString *newstring (const char *str, size_t l);
+  void nextt (void);
+  int lookahead (void);
+  l_noret syntaxerror (const char *s);
+  const char *token2str (int token);
+};
 
 
 LUAI_FUNC void luaX_init (lua_State *L);
