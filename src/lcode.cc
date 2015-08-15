@@ -972,17 +972,21 @@ void FuncState::prefix (UnOpr op, expdesc *e, int line) {
 
 
 void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
+  fs->infix(op, v);
+}
+
+void FuncState::infix (BinOpr op, expdesc *v) {
   switch (op) {
     case OPR_AND: {
-      luaK_goiftrue(fs, v);
+      goiftrue(v);
       break;
     }
     case OPR_OR: {
-      luaK_goiffalse(fs, v);
+      goiffalse(v);
       break;
     }
     case OPR_CONCAT: {
-      luaK_exp2nextreg(fs, v);  /* operand must be on the 'stack' */
+      exp2nextreg(v);  /* operand must be on the 'stack' */
       break;
     }
     case OPR_ADD: case OPR_SUB:
@@ -990,11 +994,11 @@ void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
     case OPR_MOD: case OPR_POW:
     case OPR_BAND: case OPR_BOR: case OPR_BXOR:
     case OPR_SHL: case OPR_SHR: {
-      if (!tonumeral(v, NULL)) luaK_exp2RK(fs, v);
+      if (!tonumeral(v, NULL)) exp2RK(v);
       break;
     }
     default: {
-      luaK_exp2RK(fs, v);
+      exp2RK(v);
       break;
     }
   }
@@ -1057,7 +1061,11 @@ void FuncState::posfix (BinOpr op, expdesc *e1, expdesc *e2, int line) {
 
 
 void luaK_fixline (FuncState *fs, int line) {
-  fs->f->lineinfo[fs->pc - 1] = line;
+  fs->fixline(line);
+}
+
+void FuncState::fixline (int line) {
+  f->lineinfo[pc - 1] = line;
 }
 
 

@@ -115,6 +115,8 @@ class FuncState {
   void exp2anyregup (expdesc *e);
   void exp2val (expdesc *e);
   void indexed (expdesc *t, expdesc *k);
+  void infix (BinOpr op, expdesc *v);
+  void fixline (int line);
 };
 
 
