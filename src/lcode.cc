@@ -364,37 +364,40 @@ static void freeexp (FuncState *fs, expdesc *e) {
 ** Use scanner's table to cache position of constants in constant list
 ** and try to reuse constants
 */
-static int addk (FuncState *fs, TValue *key, TValue *v) {
-  lua_State *L = fs->ls->L;
-  Proto *f = fs->f;
-  TValue *idx = luaH_set(L, fs->ls->h, key);  /* index scanner table */
+int FuncState::addk (TValue *key, TValue *v) {
+  lua_State *L = ls->L;
+  TValue *idx = luaH_set(L, ls->h, key);  /* index scanner table */
   int k, oldsize;
   if (ttisinteger(idx)) {  /* is there an index there? */
     k = cast_int(ivalue(idx));
     /* correct value? (warning: must distinguish floats from integers!) */
-    if (k < fs->nk && ttype(&f->k[k]) == ttype(v) &&
+    if (k < nk && ttype(&f->k[k]) == ttype(v) &&
                       luaV_rawequalobj(&f->k[k], v))
       return k;  /* reuse index */
   }
   /* constant not found; create a new entry */
   oldsize = f->sizek;
-  k = fs->nk;
+  k = nk;
   /* numerical value does not need GC barrier;
      table has no metatable, so it does not need to invalidate cache */
   setivalue(idx, k);
   luaM_growvector(L, f->k, k, f->sizek, TValue, MAXARG_Ax, "constants");
   while (oldsize < f->sizek) setnilvalue(&f->k[oldsize++]);
   setobj(L, &f->k[k], v);
-  fs->nk++;
+  nk++;
   luaC_barrier(L, f, v);
   return k;
 }
 
 
 int luaK_stringK (FuncState *fs, TString *s) {
+  return fs->stringK(s);
+}
+
+int FuncState::stringK (TString *s) {
   TValue o;
-  setsvalue(fs->ls->L, &o, s);
-  return addk(fs, &o, &o);
+  setsvalue(ls->L, &o, s);
+  return addk(&o, &o);
 }
 
 
@@ -404,33 +407,41 @@ int luaK_stringK (FuncState *fs, TString *s) {
 ** problems
 */
 int luaK_intK (FuncState *fs, lua_Integer n) {
+  return fs->intK(n);
+}
+
+int FuncState::intK (lua_Integer n) {
   TValue k, o;
   setpvalue(&k, cast(void*, cast(size_t, n)));
   setivalue(&o, n);
-  return addk(fs, &k, &o);
+  return addk(&k, &o);
 }
 
 
-static int luaK_numberK (FuncState *fs, lua_Number r) {
+int FuncState::luaK_numberK (lua_Number r) {
+  return numberK(r);
+}
+
+int FuncState::numberK (lua_Number r) {
   TValue o;
   setfltvalue(&o, r);
-  return addk(fs, &o, &o);
+  return addk(&o, &o);
 }
 
 
-static int boolK (FuncState *fs, int b) {
+int FuncState::boolK (int b) {
   TValue o;
   setbvalue(&o, b);
-  return addk(fs, &o, &o);
+  return addk(&o, &o);
 }
 
 
-static int nilK (FuncState *fs) {
+int FuncState::nilK (void) {
   TValue k, v;
   setnilvalue(&v);
   /* cannot use nil as key; instead use table itself to represent nil */
-  sethvalue(fs->ls->L, &k, fs->ls->h);
-  return addk(fs, &k, &v);
+  sethvalue(ls->L, &k, ls->h);
+  return addk(&k, &v);
 }
 
 
@@ -512,7 +523,7 @@ static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
       break;
     }
     case VKFLT: {
-      luaK_codek(fs, reg, luaK_numberK(fs, e->u.nval));
+      luaK_codek(fs, reg, fs->luaK_numberK(e->u.nval));
       break;
     }
     case VKINT: {
@@ -616,25 +627,29 @@ void luaK_exp2val (FuncState *fs, expdesc *e) {
 
 
 int luaK_exp2RK (FuncState *fs, expdesc *e) {
-  luaK_exp2val(fs, e);
+  return fs->exp2RK(e);
+}
+
+int FuncState::exp2RK (expdesc *e) {
+  luaK_exp2val(this, e);
   switch (e->k) {
     case VTRUE:
     case VFALSE:
     case VNIL: {
-      if (fs->nk <= MAXINDEXRK) {  /* constant fits in RK operand? */
-        e->u.info = (e->k == VNIL) ? nilK(fs) : boolK(fs, (e->k == VTRUE));
+      if (nk <= MAXINDEXRK) {  /* constant fits in RK operand? */
+        e->u.info = (e->k == VNIL) ? nilK() : boolK((e->k == VTRUE));
         e->k = VK;
         return RKASK(e->u.info);
       }
       else break;
     }
     case VKINT: {
-      e->u.info = luaK_intK(fs, e->u.ival);
+      e->u.info = intK(e->u.ival);
       e->k = VK;
       goto vk;
     }
     case VKFLT: {
-      e->u.info = luaK_numberK(fs, e->u.nval);
+      e->u.info = luaK_numberK(e->u.nval);
       e->k = VK;
     }
     /* FALLTHROUGH */
@@ -647,7 +662,7 @@ int luaK_exp2RK (FuncState *fs, expdesc *e) {
     default: break;
   }
   /* not a constant in the right range: put it in a register */
-  return luaK_exp2anyreg(fs, e);
+  return exp2anyreg(e);
 }
 
 

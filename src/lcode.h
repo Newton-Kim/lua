@@ -72,6 +72,10 @@ class FuncState {
   void exp2reg (expdesc *e, int reg);
   void invertjump (expdesc *e);
   int codeextraarg (int a);
+  int addk (TValue *key, TValue *v);
+  int numberK (lua_Number r);
+  int boolK (int b);
+  int nilK (void);
 
  public:
   void nil (int from, int n);
@@ -96,6 +100,10 @@ class FuncState {
   void setlist (int base, int nelems, int tostore);
   void checkstack (int n);
   void reserveregs (int n);
+  int stringK (TString *s);
+  int intK (lua_Integer n);
+  int luaK_numberK (lua_Number r); //supposed to be removed
+  int exp2RK (expdesc *e);
 };
 
 
