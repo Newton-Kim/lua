@@ -89,6 +89,7 @@ class FuncState {
   void storevar (expdesc *var, expdesc *ex);
   void prefix (UnOpr op, expdesc *e, int line);
   void patchtohere (int list);
+  int codeABC (OpCode o, int a, int b, int c);
 };
 
 

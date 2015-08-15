@@ -276,11 +276,15 @@ int FuncState::code (Instruction i) {
 
 
 int luaK_codeABC (FuncState *fs, OpCode o, int a, int b, int c) {
+  return fs->codeABC(o, a, b, c);
+}
+
+int FuncState::codeABC (OpCode o, int a, int b, int c) {
   lua_assert(getOpMode(o) == iABC);
   lua_assert(getBMode(o) != OpArgN || b == 0);
   lua_assert(getCMode(o) != OpArgN || c == 0);
   lua_assert(a <= MAXARG_A && b <= MAXARG_B && c <= MAXARG_C);
-  return fs->luaK_code(CREATE_ABC(o, a, b, c));
+  return code(CREATE_ABC(o, a, b, c));
 }
 
 
