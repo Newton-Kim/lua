@@ -13,30 +13,6 @@
 #include "lparser.h"
 
 
-/* state needed to generate code for a given function */
-class FuncState {
- public:
-  Proto *f;  /* current function header */
-  struct FuncState *prev;  /* enclosing function */
-  struct LexState *ls;  /* lexical state */
-  struct BlockCnt *bl;  /* chain of current blocks */
-  int pc;  /* next position to code (equivalent to 'ncode') */
-  int lasttarget;   /* 'label' of last 'jump label' */
-  int jpc;  /* list of pending jumps to 'pc' */
-  int nk;  /* number of elements in 'k' */
-  int np;  /* number of elements in 'p' */
-  int firstlocal;  /* index of first local var (in Dyndata array) */
-  short nlocvars;  /* number of elements in 'f->locvars' */
-  lu_byte nactvar;  /* number of active local variables */
-  lu_byte nups;  /* number of upvalues */
-  lu_byte freereg;  /* first free register */
-
- public:
-  void nil (int from, int n);
-  int jump (void);
-};
-
-
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute
 ** address, and as a list link (would link an element to itself).
@@ -62,6 +38,39 @@ typedef enum BinOpr {
 
 
 typedef enum UnOpr { OPR_MINUS, OPR_BNOT, OPR_NOT, OPR_LEN, OPR_NOUNOPR } UnOpr;
+
+
+/* state needed to generate code for a given function */
+class FuncState {
+ public:
+  Proto *f;  /* current function header */
+  struct FuncState *prev;  /* enclosing function */
+  struct LexState *ls;  /* lexical state */
+  struct BlockCnt *bl;  /* chain of current blocks */
+  int pc;  /* next position to code (equivalent to 'ncode') */
+  int lasttarget;   /* 'label' of last 'jump label' */
+  int jpc;  /* list of pending jumps to 'pc' */
+  int nk;  /* number of elements in 'k' */
+  int np;  /* number of elements in 'p' */
+  int firstlocal;  /* index of first local var (in Dyndata array) */
+  short nlocvars;  /* number of elements in 'f->locvars' */
+  lu_byte nactvar;  /* number of active local variables */
+  lu_byte nups;  /* number of upvalues */
+  lu_byte freereg;  /* first free register */
+
+ private:
+  int condjump (OpCode op, int A, int B, int C);
+  int jumponcond (expdesc *e, int cond);
+  void codecomp (OpCode op, int cond, expdesc *e1, expdesc *e2);
+
+ public:
+  void nil (int from, int n);
+  int jump (void);
+  void ret (int first, int nret);
+  void goiftrue (expdesc *e);
+  void goiffalse (expdesc *e);
+  void posfix (BinOpr op, expdesc *e1, expdesc *e2, int line);
+};
 
 
 #define getcode(fs,e)	((fs)->f->code[(e)->u.info])

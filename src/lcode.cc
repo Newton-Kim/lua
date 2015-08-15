@@ -92,13 +92,17 @@ int FuncState::jump (void) {
 
 
 void luaK_ret (FuncState *fs, int first, int nret) {
-  luaK_codeABC(fs, OP_RETURN, first, nret+1, 0);
+  fs->ret(first, nret);
+}
+
+void FuncState::ret (int first, int nret) {
+  luaK_codeABC(this, OP_RETURN, first, nret+1, 0);
 }
 
 
-static int condjump (FuncState *fs, OpCode op, int A, int B, int C) {
-  luaK_codeABC(fs, op, A, B, C);
-  return luaK_jump(fs);
+int FuncState::condjump (OpCode op, int A, int B, int C) {
+  luaK_codeABC(this, op, A, B, C);
+  return jump();
 }
 
 
@@ -645,27 +649,31 @@ static void invertjump (FuncState *fs, expdesc *e) {
 }
 
 
-static int jumponcond (FuncState *fs, expdesc *e, int cond) {
+int FuncState::jumponcond (expdesc *e, int cond) {
   if (e->k == VRELOCABLE) {
-    Instruction ie = getcode(fs, e);
+    Instruction ie = getcode(this, e);
     if (GET_OPCODE(ie) == OP_NOT) {
-      fs->pc--;  /* remove previous OP_NOT */
-      return condjump(fs, OP_TEST, GETARG_B(ie), 0, !cond);
+      pc--;  /* remove previous OP_NOT */
+      return condjump(OP_TEST, GETARG_B(ie), 0, !cond);
     }
     /* else go through */
   }
-  discharge2anyreg(fs, e);
-  freeexp(fs, e);
-  return condjump(fs, OP_TESTSET, NO_REG, e->u.info, cond);
+  discharge2anyreg(this, e);
+  freeexp(this, e);
+  return condjump(OP_TESTSET, NO_REG, e->u.info, cond);
 }
 
 
 void luaK_goiftrue (FuncState *fs, expdesc *e) {
+  fs->goiftrue(e);
+}
+
+void FuncState::goiftrue (expdesc *e) {
   int pc;  /* pc of last jump */
-  luaK_dischargevars(fs, e);
+  luaK_dischargevars(this, e);
   switch (e->k) {
     case VJMP: {
-      invertjump(fs, e);
+      invertjump(this, e);
       pc = e->u.info;
       break;
     }
@@ -674,19 +682,23 @@ void luaK_goiftrue (FuncState *fs, expdesc *e) {
       break;
     }
     default: {
-      pc = jumponcond(fs, e, 0);
+      pc = jumponcond(e, 0);
       break;
     }
   }
-  luaK_concat(fs, &e->f, pc);  /* insert last jump in 'f' list */
-  luaK_patchtohere(fs, e->t);
+  luaK_concat(this, &e->f, pc);  /* insert last jump in 'f' list */
+  luaK_patchtohere(this, e->t);
   e->t = NO_JUMP;
 }
 
 
 void luaK_goiffalse (FuncState *fs, expdesc *e) {
+  fs->goiffalse(e);
+}
+
+void FuncState::goiffalse (expdesc *e) {
   int pc;  /* pc of last jump */
-  luaK_dischargevars(fs, e);
+  luaK_dischargevars(this, e);
   switch (e->k) {
     case VJMP: {
       pc = e->u.info;
@@ -697,12 +709,12 @@ void luaK_goiffalse (FuncState *fs, expdesc *e) {
       break;
     }
     default: {
-      pc = jumponcond(fs, e, 1);
+      pc = jumponcond(e, 1);
       break;
     }
   }
-  luaK_concat(fs, &e->t, pc);  /* insert last jump in 't' list */
-  luaK_patchtohere(fs, e->f);
+  luaK_concat(this, &e->t, pc);  /* insert last jump in 't' list */
+  luaK_patchtohere(this, e->f);
   e->f = NO_JUMP;
 }
 
@@ -830,18 +842,17 @@ static void codeexpval (FuncState *fs, OpCode op,
 }
 
 
-static void codecomp (FuncState *fs, OpCode op, int cond, expdesc *e1,
-                                                          expdesc *e2) {
-  int o1 = luaK_exp2RK(fs, e1);
-  int o2 = luaK_exp2RK(fs, e2);
-  freeexp(fs, e2);
-  freeexp(fs, e1);
+void FuncState::codecomp (OpCode op, int cond, expdesc *e1, expdesc *e2) {
+  int o1 = luaK_exp2RK(this, e1);
+  int o2 = luaK_exp2RK(this, e2);
+  freeexp(this, e2);
+  freeexp(this, e1);
   if (cond == 0 && op != OP_EQ) {
     int temp;  /* exchange args to replace by '<' or '<=' */
     temp = o1; o1 = o2; o2 = temp;  /* o1 <==> o2 */
     cond = 1;
   }
-  e1->u.info = condjump(fs, op, cond, o1, o2);
+  e1->u.info = condjump(op, cond, o1, o2);
   e1->k = VJMP;
 }
 
@@ -890,34 +901,38 @@ void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
 }
 
 
-void luaK_posfix (FuncState *fs, BinOpr op,
-                  expdesc *e1, expdesc *e2, int line) {
+void luaK_posfix (FuncState *fs, BinOpr op, expdesc *e1, expdesc *e2,
+                                                          int line) {
+  fs->posfix(op, e1, e2, line);
+}
+
+void FuncState::posfix (BinOpr op, expdesc *e1, expdesc *e2, int line) {
   switch (op) {
     case OPR_AND: {
       lua_assert(e1->t == NO_JUMP);  /* list must be closed */
-      luaK_dischargevars(fs, e2);
-      luaK_concat(fs, &e2->f, e1->f);
+      luaK_dischargevars(this, e2);
+      luaK_concat(this, &e2->f, e1->f);
       *e1 = *e2;
       break;
     }
     case OPR_OR: {
       lua_assert(e1->f == NO_JUMP);  /* list must be closed */
-      luaK_dischargevars(fs, e2);
-      luaK_concat(fs, &e2->t, e1->t);
+      luaK_dischargevars(this, e2);
+      luaK_concat(this, &e2->t, e1->t);
       *e1 = *e2;
       break;
     }
     case OPR_CONCAT: {
-      luaK_exp2val(fs, e2);
-      if (e2->k == VRELOCABLE && GET_OPCODE(getcode(fs, e2)) == OP_CONCAT) {
-        lua_assert(e1->u.info == GETARG_B(getcode(fs, e2))-1);
-        freeexp(fs, e1);
-        SETARG_B(getcode(fs, e2), e1->u.info);
+      luaK_exp2val(this, e2);
+      if (e2->k == VRELOCABLE && GET_OPCODE(getcode(this, e2)) == OP_CONCAT) {
+        lua_assert(e1->u.info == GETARG_B(getcode(this, e2))-1);
+        freeexp(this, e1);
+        SETARG_B(getcode(this, e2), e1->u.info);
         e1->k = VRELOCABLE; e1->u.info = e2->u.info;
       }
       else {
-        luaK_exp2nextreg(fs, e2);  /* operand must be on the 'stack' */
-        codeexpval(fs, OP_CONCAT, e1, e2, line);
+        luaK_exp2nextreg(this, e2);  /* operand must be on the 'stack' */
+        codeexpval(this, OP_CONCAT, e1, e2, line);
       }
       break;
     }
@@ -925,15 +940,15 @@ void luaK_posfix (FuncState *fs, BinOpr op,
     case OPR_IDIV: case OPR_MOD: case OPR_POW:
     case OPR_BAND: case OPR_BOR: case OPR_BXOR:
     case OPR_SHL: case OPR_SHR: {
-      codeexpval(fs, cast(OpCode, (op - OPR_ADD) + OP_ADD), e1, e2, line);
+      codeexpval(this, cast(OpCode, (op - OPR_ADD) + OP_ADD), e1, e2, line);
       break;
     }
     case OPR_EQ: case OPR_LT: case OPR_LE: {
-      codecomp(fs, cast(OpCode, (op - OPR_EQ) + OP_EQ), 1, e1, e2);
+      codecomp(cast(OpCode, (op - OPR_EQ) + OP_EQ), 1, e1, e2);
       break;
     }
     case OPR_NE: case OPR_GT: case OPR_GE: {
-      codecomp(fs, cast(OpCode, (op - OPR_NE) + OP_EQ), 0, e1, e2);
+      codecomp(cast(OpCode, (op - OPR_NE) + OP_EQ), 0, e1, e2);
       break;
     }
     default: lua_assert(0);
