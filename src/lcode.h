@@ -62,6 +62,15 @@ class FuncState {
   int condjump (OpCode op, int A, int B, int C);
   int jumponcond (expdesc *e, int cond);
   void codecomp (OpCode op, int cond, expdesc *e1, expdesc *e2);
+  int getjump (int pc);
+  int need_value (int list);
+  void removevalues (int list);
+  void patchlistaux (int list, int vtarget, int reg, int dtarget);
+  void dischargejpc (void);
+  int code (Instruction i);
+  void codenot (expdesc *e);
+  void exp2reg (expdesc *e, int reg);
+  void invertjump (expdesc *e);
 
  public:
   void nil (int from, int n);
@@ -70,6 +79,15 @@ class FuncState {
   void goiftrue (expdesc *e);
   void goiffalse (expdesc *e);
   void posfix (BinOpr op, expdesc *e1, expdesc *e2, int line);
+  int getlabel (void);
+  void patchlist (int list, int target);
+  void patchclose (int list, int level);
+  void concat (int *l1, int l2);
+  int luaK_code (Instruction i); //supposed to be removed
+  void exp2nextreg (expdesc *e);
+  int exp2anyreg (expdesc *e);
+  void storevar (expdesc *var, expdesc *ex);
+  void prefix (UnOpr op, expdesc *e, int line);
 };
 
 
