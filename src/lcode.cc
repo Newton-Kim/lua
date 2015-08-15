@@ -300,18 +300,22 @@ int FuncState::codeABx (OpCode o, int a, unsigned int bc) {
 }
 
 
-static int codeextraarg (FuncState *fs, int a) {
+int FuncState::codeextraarg (int a) {
   lua_assert(a <= MAXARG_Ax);
-  return fs->luaK_code(CREATE_Ax(OP_EXTRAARG, a));
+  return code(CREATE_Ax(OP_EXTRAARG, a));
 }
 
 
 int luaK_codek (FuncState *fs, int reg, int k) {
+  return fs->codek(reg, k);
+}
+
+int FuncState::codek (int reg, int k) {
   if (k <= MAXARG_Bx)
-    return luaK_codeABx(fs, OP_LOADK, reg, k);
+    return codeABx(OP_LOADK, reg, k);
   else {
-    int p = luaK_codeABx(fs, OP_LOADKX, reg, 0);
-    codeextraarg(fs, k);
+    int p = codeABx(OP_LOADKX, reg, 0);
+    codeextraarg(k);
     return p;
   }
 }
@@ -1008,17 +1012,21 @@ void luaK_fixline (FuncState *fs, int line) {
 
 
 void luaK_setlist (FuncState *fs, int base, int nelems, int tostore) {
+  fs->setlist(base, nelems, tostore);
+}
+
+void FuncState::setlist (int base, int nelems, int tostore) {
   int c =  (nelems - 1)/LFIELDS_PER_FLUSH + 1;
   int b = (tostore == LUA_MULTRET) ? 0 : tostore;
   lua_assert(tostore != 0);
   if (c <= MAXARG_C)
-    luaK_codeABC(fs, OP_SETLIST, base, b, c);
+    codeABC(OP_SETLIST, base, b, c);
   else if (c <= MAXARG_Ax) {
-    luaK_codeABC(fs, OP_SETLIST, base, b, 0);
-    codeextraarg(fs, c);
+    codeABC(OP_SETLIST, base, b, 0);
+    codeextraarg(c);
   }
   else
-    fs->ls->syntaxerror("constructor too long");
-  fs->freereg = base + 1;  /* free registers with list values */
+    ls->syntaxerror("constructor too long");
+  freereg = base + 1;  /* free registers with list values */
 }
 

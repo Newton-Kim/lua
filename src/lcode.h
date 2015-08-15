@@ -71,6 +71,7 @@ class FuncState {
   void codenot (expdesc *e);
   void exp2reg (expdesc *e, int reg);
   void invertjump (expdesc *e);
+  int codeextraarg (int a);
 
  public:
   void nil (int from, int n);
@@ -91,6 +92,8 @@ class FuncState {
   void patchtohere (int list);
   int codeABC (OpCode o, int a, int b, int c);
   int codeABx (OpCode o, int a, unsigned int bc);
+  int codek (int reg, int k);
+  void setlist (int base, int nelems, int tostore);
 };
 
 
