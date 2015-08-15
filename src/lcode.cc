@@ -462,12 +462,16 @@ void FuncState::setreturns (expdesc *e, int nresults) {
 
 
 void luaK_setoneret (FuncState *fs, expdesc *e) {
+  fs->setoneret(e);
+}
+
+void FuncState::setoneret (expdesc *e) {
   if (e->k == VCALL) {  /* expression is an open function call? */
     e->k = VNONRELOC;
-    e->u.info = GETARG_A(getcode(fs, e));
+    e->u.info = GETARG_A(getcode(this, e));
   }
   else if (e->k == VVARARG) {
-    SETARG_B(getcode(fs, e), 2);
+    SETARG_B(getcode(this, e), 2);
     e->k = VRELOCABLE;  /* can relocate its simple result */
   }
 }

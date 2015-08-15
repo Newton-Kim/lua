@@ -105,6 +105,7 @@ class FuncState {
   int luaK_numberK (lua_Number r); //supposed to be removed
   int exp2RK (expdesc *e);
   void setreturns (expdesc *e, int nresults);
+  void setoneret (expdesc *e);
 };
 
 
