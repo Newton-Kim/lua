@@ -230,8 +230,12 @@ void FuncState::patchclose (int list, int level) {
 
 
 void luaK_patchtohere (FuncState *fs, int list) {
-  luaK_getlabel(fs);
-  luaK_concat(fs, &fs->jpc, list);
+  fs->patchtohere(list);
+}
+
+void FuncState::patchtohere (int list) {
+  getlabel();
+  concat(&jpc, list);
 }
 
 

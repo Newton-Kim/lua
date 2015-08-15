@@ -88,6 +88,7 @@ class FuncState {
   int exp2anyreg (expdesc *e);
   void storevar (expdesc *var, expdesc *ex);
   void prefix (UnOpr op, expdesc *e, int line);
+  void patchtohere (int list);
 };
 
 
