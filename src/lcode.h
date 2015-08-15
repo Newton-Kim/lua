@@ -13,6 +13,25 @@
 #include "lparser.h"
 
 
+/* state needed to generate code for a given function */
+typedef struct FuncState {
+  Proto *f;  /* current function header */
+  struct FuncState *prev;  /* enclosing function */
+  struct LexState *ls;  /* lexical state */
+  struct BlockCnt *bl;  /* chain of current blocks */
+  int pc;  /* next position to code (equivalent to 'ncode') */
+  int lasttarget;   /* 'label' of last 'jump label' */
+  int jpc;  /* list of pending jumps to 'pc' */
+  int nk;  /* number of elements in 'k' */
+  int np;  /* number of elements in 'p' */
+  int firstlocal;  /* index of first local var (in Dyndata array) */
+  short nlocvars;  /* number of elements in 'f->locvars' */
+  lu_byte nactvar;  /* number of active local variables */
+  lu_byte nups;  /* number of upvalues */
+  lu_byte freereg;  /* first free register */
+} FuncState;
+
+
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute
 ** address, and as a list link (would link an element to itself).
