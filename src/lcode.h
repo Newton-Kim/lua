@@ -76,6 +76,10 @@ class FuncState {
   int numberK (lua_Number r);
   int boolK (int b);
   int nilK (void);
+  void free_reg (int reg);
+  void freeexp (expdesc *e);
+  void codeexpval (OpCode op, expdesc *e1, expdesc *e2, int line);
+  int constfolding (int op, expdesc *e1, expdesc *e2);
 
  public:
   void nil (int from, int n);
@@ -106,6 +110,8 @@ class FuncState {
   int exp2RK (expdesc *e);
   void setreturns (expdesc *e, int nresults);
   void setoneret (expdesc *e);
+  void dischargevars (expdesc *e);
+  void self (expdesc *e, expdesc *key);
 };
 
 
