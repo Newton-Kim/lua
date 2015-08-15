@@ -94,6 +94,8 @@ class FuncState {
   int codeABx (OpCode o, int a, unsigned int bc);
   int codek (int reg, int k);
   void setlist (int base, int nelems, int tostore);
+  void checkstack (int n);
+  void reserveregs (int n);
 };
 
 

@@ -322,19 +322,27 @@ int FuncState::codek (int reg, int k) {
 
 
 void luaK_checkstack (FuncState *fs, int n) {
-  int newstack = fs->freereg + n;
-  if (newstack > fs->f->maxstacksize) {
+  fs->checkstack(n);
+}
+
+void FuncState::checkstack (int n) {
+  int newstack = freereg + n;
+  if (newstack > f->maxstacksize) {
     if (newstack >= MAXREGS)
-      fs->ls->syntaxerror(
+      ls->syntaxerror(
         "function or expression needs too many registers");
-    fs->f->maxstacksize = cast_byte(newstack);
+    f->maxstacksize = cast_byte(newstack);
   }
 }
 
 
 void luaK_reserveregs (FuncState *fs, int n) {
-  luaK_checkstack(fs, n);
-  fs->freereg += n;
+  fs->reserveregs(n);
+}
+
+void FuncState::reserveregs (int n) {
+  checkstack(n);
+  freereg += n;
 }
 
 
