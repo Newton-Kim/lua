@@ -104,10 +104,11 @@ class FuncState {
   int intK (lua_Integer n);
   int luaK_numberK (lua_Number r); //supposed to be removed
   int exp2RK (expdesc *e);
+  void setreturns (expdesc *e, int nresults);
 };
 
 
-#define getcode(fs,e)	((fs)->f->code[(e)->u.info])
+#define getcode(fs, e) ((fs)->f->code[(e)->u.info])
 
 #define luaK_codeAsBx(fs,o,A,sBx)	luaK_codeABx(fs,o,A,(sBx)+MAXARG_sBx)
 
