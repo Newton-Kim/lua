@@ -114,6 +114,7 @@ class FuncState {
   void self (expdesc *e, expdesc *key);
   void exp2anyregup (expdesc *e);
   void exp2val (expdesc *e);
+  void indexed (expdesc *t, expdesc *k);
 };
 
 

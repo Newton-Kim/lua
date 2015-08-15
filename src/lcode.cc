@@ -848,9 +848,13 @@ void FuncState::codenot (expdesc *e) {
 
 
 void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k) {
+  fs->indexed(t, k);
+}
+
+void FuncState::indexed (expdesc *t, expdesc *k) {
   lua_assert(!hasjumps(t));
   t->u.ind.t = t->u.info;
-  t->u.ind.idx = luaK_exp2RK(fs, k);
+  t->u.ind.idx = exp2RK(k);
   t->u.ind.vt = (t->k == VUPVAL) ? VUPVAL
                                  : check_exp(vkisinreg(t->k), VLOCAL);
   t->k = VINDEXED;
