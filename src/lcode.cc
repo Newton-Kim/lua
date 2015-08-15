@@ -635,10 +635,14 @@ void FuncState::exp2anyregup (expdesc *e) {
 
 
 void luaK_exp2val (FuncState *fs, expdesc *e) {
+  fs->exp2val(e);
+}
+
+void FuncState::exp2val (expdesc *e) {
   if (hasjumps(e))
-    luaK_exp2anyreg(fs, e);
+    exp2anyreg(e);
   else
-    luaK_dischargevars(fs, e);
+    dischargevars(e);
 }
 
 
