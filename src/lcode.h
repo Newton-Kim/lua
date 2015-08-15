@@ -90,6 +90,7 @@ class FuncState {
   void prefix (UnOpr op, expdesc *e, int line);
   void patchtohere (int list);
   int codeABC (OpCode o, int a, int b, int c);
+  int codeABx (OpCode o, int a, unsigned int bc);
 };
 
 

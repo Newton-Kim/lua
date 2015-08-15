@@ -289,10 +289,14 @@ int FuncState::codeABC (OpCode o, int a, int b, int c) {
 
 
 int luaK_codeABx (FuncState *fs, OpCode o, int a, unsigned int bc) {
+  return fs->codeABx(o, a, bc);
+}
+
+int FuncState::codeABx (OpCode o, int a, unsigned int bc) {
   lua_assert(getOpMode(o) == iABx || getOpMode(o) == iAsBx);
   lua_assert(getCMode(o) == OpArgN);
   lua_assert(a <= MAXARG_A && bc <= MAXARG_Bx);
-  return fs->luaK_code(CREATE_ABx(o, a, bc));
+  return code(CREATE_ABx(o, a, bc));
 }
 
 
