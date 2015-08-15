@@ -52,10 +52,14 @@ static int tonumeral(expdesc *e, TValue *v) {
 
 
 void luaK_nil (FuncState *fs, int from, int n) {
+  fs->nil(from, n);
+}
+
+void FuncState::nil (int from, int n) {
   Instruction *previous;
   int l = from + n - 1;  /* last register to set nil */
-  if (fs->pc > fs->lasttarget) {  /* no jumps to current position? */
-    previous = &fs->f->code[fs->pc-1];
+  if (pc > lasttarget) {  /* no jumps to current position? */
+    previous = &f->code[pc-1];
     if (GET_OPCODE(*previous) == OP_LOADNIL) {
       int pfrom = GETARG_A(*previous);
       int pl = pfrom + GETARG_B(*previous);
@@ -69,16 +73,20 @@ void luaK_nil (FuncState *fs, int from, int n) {
       }
     }  /* else go through */
   }
-  luaK_codeABC(fs, OP_LOADNIL, from, n - 1, 0);  /* else no optimization */
+  luaK_codeABC(this, OP_LOADNIL, from, n - 1, 0);  /* else no optimization */
 }
 
 
 int luaK_jump (FuncState *fs) {
-  int jpc = fs->jpc;  /* save list of jumps to here */
+  return fs->jump();
+}
+
+int FuncState::jump (void) {
+  int ljpc = jpc;  /* save list of jumps to here */
   int j;
-  fs->jpc = NO_JUMP;
-  j = luaK_codeAsBx(fs, OP_JMP, 0, NO_JUMP);
-  luaK_concat(fs, &j, jpc);  /* keep them on hold */
+  jpc = NO_JUMP;
+  j = luaK_codeAsBx(this, OP_JMP, 0, NO_JUMP);
+  luaK_concat(this, &j, ljpc);  /* keep them on hold */
   return j;
 }
 

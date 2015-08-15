@@ -14,7 +14,8 @@
 
 
 /* state needed to generate code for a given function */
-typedef struct FuncState {
+class FuncState {
+ public:
   Proto *f;  /* current function header */
   struct FuncState *prev;  /* enclosing function */
   struct LexState *ls;  /* lexical state */
@@ -29,7 +30,11 @@ typedef struct FuncState {
   lu_byte nactvar;  /* number of active local variables */
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */
-} FuncState;
+
+ public:
+  void nil (int from, int n);
+  int jump (void);
+};
 
 
 /*
