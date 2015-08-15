@@ -625,8 +625,12 @@ int FuncState::exp2anyreg (expdesc *e) {
 
 
 void luaK_exp2anyregup (FuncState *fs, expdesc *e) {
+  fs->exp2anyregup(e);
+}
+
+void FuncState::exp2anyregup (expdesc *e) {
   if (e->k != VUPVAL || hasjumps(e))
-    luaK_exp2anyreg(fs, e);
+    exp2anyreg(e);
 }
 
 

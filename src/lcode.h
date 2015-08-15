@@ -112,6 +112,7 @@ class FuncState {
   void setoneret (expdesc *e);
   void dischargevars (expdesc *e);
   void self (expdesc *e, expdesc *key);
+  void exp2anyregup (expdesc *e);
 };
 
 
