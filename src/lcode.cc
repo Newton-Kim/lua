@@ -963,10 +963,6 @@ void FuncState::prefix (UnOpr op, expdesc *e, int line) {
 }
 
 
-void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
-  fs->infix(op, v);
-}
-
 void FuncState::infix (BinOpr op, expdesc *v) {
   switch (op) {
     case OPR_AND: {
