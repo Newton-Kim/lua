@@ -119,6 +119,7 @@ class FuncState {
   void fixline (int line);
   inline int codeAsBx(OpCode o, int a, unsigned int sBx) { return codeABx(o, a, (sBx)+MAXARG_sBx); }
   inline void setmultret(expdesc *e) { setreturns(e, LUA_MULTRET); }
+  inline void jumpto(int t) { patchlist(jump(), t); }
 };
 
 
@@ -128,7 +129,7 @@ class FuncState {
 
 //#define luaK_setmultret(fs,e)	luaK_setreturns(fs, e, LUA_MULTRET)
 
-#define luaK_jumpto(fs,t)	luaK_patchlist(fs, luaK_jump(fs), t)
+//#define luaK_jumpto(fs,t)	luaK_patchlist(fs, luaK_jump(fs), t)
 
 LUAI_FUNC int luaK_codeABx (FuncState *fs, OpCode o, int A, unsigned int Bx);
 LUAI_FUNC int luaK_codeABC (FuncState *fs, OpCode o, int A, int B, int C);
