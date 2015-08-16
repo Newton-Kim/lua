@@ -118,6 +118,7 @@ class FuncState {
   void infix (BinOpr op, expdesc *v);
   void fixline (int line);
   inline int codeAsBx(OpCode o, int a, unsigned int sBx) { return codeABx(o, a, (sBx)+MAXARG_sBx); }
+  inline void setmultret(expdesc *e) { setreturns(e, LUA_MULTRET); }
 };
 
 
@@ -125,7 +126,7 @@ class FuncState {
 
 //#define luaK_codeAsBx(fs,o,A,sBx)	luaK_codeABx(fs,o,A,(sBx)+MAXARG_sBx)
 
-#define luaK_setmultret(fs,e)	luaK_setreturns(fs, e, LUA_MULTRET)
+//#define luaK_setmultret(fs,e)	luaK_setreturns(fs, e, LUA_MULTRET)
 
 #define luaK_jumpto(fs,t)	luaK_patchlist(fs, luaK_jump(fs), t)
 

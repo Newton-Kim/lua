@@ -672,7 +672,7 @@ static void closelistfield (FuncState *fs, struct ConsControl *cc) {
 static void lastlistfield (FuncState *fs, struct ConsControl *cc) {
   if (cc->tostore == 0) return;
   if (hasmultret(cc->v.k)) {
-    luaK_setmultret(fs, &cc->v);
+    fs->setmultret(&cc->v);
     luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
     cc->na--;  /* do not count last expression (unknown number of elements) */
   }
@@ -819,7 +819,7 @@ static void funcargs (LexState *ls, expdesc *f, int line) {
         args.k = VVOID;
       else {
         explist(ls, &args);
-        luaK_setmultret(fs, &args);
+        fs->setmultret(&args);
       }
       check_match(ls, ')', '(', line);
       break;
@@ -1508,7 +1508,7 @@ static void retstat (LexState *ls) {
   else {
     nret = explist(ls, &e);  /* optional return values */
     if (hasmultret(e.k)) {
-      luaK_setmultret(fs, &e);
+      fs->setmultret(&e);
       if (e.k == VCALL && nret == 1) {  /* tail call? */
         SET_OPCODE(getcode(fs, &e), OP_TAILCALL);
         lua_assert(GETARG_A(getcode(fs->&e)) == fs->nactvar);
