@@ -1058,10 +1058,10 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
     BinOpr nextop;
     int line = ls->linenumber;
     ls->nextt();
-    luaK_infix(ls->fs, op, v);
+    ls->fs->infix(op, v);
     /* read sub-expression with higher priority */
     nextop = subexpr(ls, &v2, priority[op].right);
-    luaK_posfix(ls->fs, op, v, &v2, line);
+    ls->fs->posfix(op, v, &v2, line);
     op = nextop;
   }
   leavelevel(ls);

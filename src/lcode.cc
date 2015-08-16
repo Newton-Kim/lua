@@ -997,11 +997,6 @@ void FuncState::infix (BinOpr op, expdesc *v) {
 }
 
 
-void luaK_posfix (FuncState *fs, BinOpr op, expdesc *e1, expdesc *e2,
-                                                          int line) {
-  fs->posfix(op, e1, e2, line);
-}
-
 void FuncState::posfix (BinOpr op, expdesc *e1, expdesc *e2, int line) {
   switch (op) {
     case OPR_AND: {
