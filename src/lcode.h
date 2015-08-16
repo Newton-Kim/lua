@@ -117,12 +117,13 @@ class FuncState {
   void indexed (expdesc *t, expdesc *k);
   void infix (BinOpr op, expdesc *v);
   void fixline (int line);
+  inline int codeAsBx(OpCode o, int a, unsigned int sBx) { return codeABx(o, a, (sBx)+MAXARG_sBx); }
 };
 
 
 #define getcode(fs, e) ((fs)->f->code[(e)->u.info])
 
-#define luaK_codeAsBx(fs,o,A,sBx)	luaK_codeABx(fs,o,A,(sBx)+MAXARG_sBx)
+//#define luaK_codeAsBx(fs,o,A,sBx)	luaK_codeABx(fs,o,A,(sBx)+MAXARG_sBx)
 
 #define luaK_setmultret(fs,e)	luaK_setreturns(fs, e, LUA_MULTRET)
 

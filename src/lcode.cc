@@ -85,7 +85,7 @@ int FuncState::jump (void) {
   int ljpc = jpc;  /* save list of jumps to here */
   int j;
   jpc = NO_JUMP;
-  j = luaK_codeAsBx(this, OP_JMP, 0, NO_JUMP);
+  j = codeAsBx(OP_JMP, 0, NO_JUMP);
   luaK_concat(this, &j, ljpc);  /* keep them on hold */
   return j;
 }
