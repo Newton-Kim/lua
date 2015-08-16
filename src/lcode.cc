@@ -1061,10 +1061,6 @@ void FuncState::fixline (int line) {
 }
 
 
-void luaK_setlist (FuncState *fs, int base, int nelems, int tostore) {
-  fs->setlist(base, nelems, tostore);
-}
-
 void FuncState::setlist (int base, int nelems, int tostore) {
   int c =  (nelems - 1)/LFIELDS_PER_FLUSH + 1;
   int b = (tostore == LUA_MULTRET) ? 0 : tostore;

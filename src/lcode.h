@@ -125,12 +125,6 @@ class FuncState {
 
 #define getcode(fs, e) ((fs)->f->code[(e)->u.info])
 
-//#define luaK_codeAsBx(fs,o,A,sBx)	luaK_codeABx(fs,o,A,(sBx)+MAXARG_sBx)
-
-//#define luaK_setmultret(fs,e)	luaK_setreturns(fs, e, LUA_MULTRET)
-
-//#define luaK_jumpto(fs,t)	luaK_patchlist(fs, luaK_jump(fs), t)
-
 LUAI_FUNC int luaK_codeABx (FuncState *fs, OpCode o, int A, unsigned int Bx);
 LUAI_FUNC int luaK_codeABC (FuncState *fs, OpCode o, int A, int B, int C);
 LUAI_FUNC int luaK_codek (FuncState *fs, int reg, int k);
@@ -164,7 +158,6 @@ LUAI_FUNC void luaK_prefix (FuncState *fs, UnOpr op, expdesc *v, int line);
 LUAI_FUNC void luaK_infix (FuncState *fs, BinOpr op, expdesc *v);
 LUAI_FUNC void luaK_posfix (FuncState *fs, BinOpr op, expdesc *v1,
                             expdesc *v2, int line);
-LUAI_FUNC void luaK_setlist (FuncState *fs, int base, int nelems, int tostore);
 
 
 #endif

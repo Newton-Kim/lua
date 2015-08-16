@@ -663,7 +663,7 @@ static void closelistfield (FuncState *fs, struct ConsControl *cc) {
   luaK_exp2nextreg(fs, &cc->v);
   cc->v.k = VVOID;
   if (cc->tostore == LFIELDS_PER_FLUSH) {
-    luaK_setlist(fs, cc->t->u.info, cc->na, cc->tostore);  /* flush */
+    fs->setlist(cc->t->u.info, cc->na, cc->tostore);  /* flush */
     cc->tostore = 0;  /* no more items pending */
   }
 }
@@ -673,13 +673,13 @@ static void lastlistfield (FuncState *fs, struct ConsControl *cc) {
   if (cc->tostore == 0) return;
   if (hasmultret(cc->v.k)) {
     fs->setmultret(&cc->v);
-    luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
+    fs->setlist(cc->t->u.info, cc->na, LUA_MULTRET);
     cc->na--;  /* do not count last expression (unknown number of elements) */
   }
   else {
     if (cc->v.k != VVOID)
       luaK_exp2nextreg(fs, &cc->v);
-    luaK_setlist(fs, cc->t->u.info, cc->na, cc->tostore);
+    fs->setlist(cc->t->u.info, cc->na, cc->tostore);
   }
 }
 
