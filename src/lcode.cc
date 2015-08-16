@@ -257,10 +257,6 @@ void FuncState::concat (int *l1, int l2) {
 }
 
 
-int FuncState::luaK_code (Instruction i) {
-  return code(i);
-}
-
 int FuncState::code (Instruction i) {
   dischargejpc();  /* 'pc' will change */
   /* put new instruction in code array */
@@ -418,10 +414,6 @@ int FuncState::intK (lua_Integer n) {
 }
 
 
-int FuncState::luaK_numberK (lua_Number r) {
-  return numberK(r);
-}
-
 int FuncState::numberK (lua_Number r) {
   TValue o;
   setfltvalue(&o, r);
@@ -519,37 +511,37 @@ static int code_label (FuncState *fs, int A, int b, int jump) {
 }
 
 
-static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
-  luaK_dischargevars(fs, e);
+void FuncState::discharge2reg (expdesc *e, int reg) {
+  dischargevars(e);
   switch (e->k) {
     case VNIL: {
-      luaK_nil(fs, reg, 1);
+      nil(reg, 1);
       break;
     }
     case VFALSE: case VTRUE: {
-      luaK_codeABC(fs, OP_LOADBOOL, reg, e->k == VTRUE, 0);
+      codeABC(OP_LOADBOOL, reg, e->k == VTRUE, 0);
       break;
     }
     case VK: {
-      luaK_codek(fs, reg, e->u.info);
+      codek(reg, e->u.info);
       break;
     }
     case VKFLT: {
-      luaK_codek(fs, reg, fs->luaK_numberK(e->u.nval));
+      codek(reg, numberK(e->u.nval));
       break;
     }
     case VKINT: {
-      luaK_codek(fs, reg, luaK_intK(fs, e->u.ival));
+      codek(reg, intK(e->u.ival));
       break;
     }
     case VRELOCABLE: {
-      Instruction *pc = &getcode(fs, e);
+      Instruction *pc = &getcode(this, e);
       SETARG_A(*pc, reg);
       break;
     }
     case VNONRELOC: {
       if (reg != e->u.info)
-        luaK_codeABC(fs, OP_MOVE, reg, e->u.info, 0);
+        codeABC(OP_MOVE, reg, e->u.info, 0);
       break;
     }
     default: {
@@ -562,16 +554,16 @@ static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
 }
 
 
-static void discharge2anyreg (FuncState *fs, expdesc *e) {
+void FuncState::discharge2anyreg (expdesc *e) {
   if (e->k != VNONRELOC) {
-    luaK_reserveregs(fs, 1);
-    discharge2reg(fs, e, fs->freereg-1);
+    reserveregs(1);
+    discharge2reg(e, freereg-1);
   }
 }
 
 
 void FuncState::exp2reg (expdesc *e, int reg) {
-  discharge2reg(this, e, reg);
+  discharge2reg(e, reg);
   if (e->k == VJMP)
     concat(&e->t, e->u.info);  /* put this jump in 't' list */
   if (hasjumps(e)) {
@@ -669,7 +661,7 @@ int FuncState::exp2RK (expdesc *e) {
       goto vk;
     }
     case VKFLT: {
-      e->u.info = luaK_numberK(e->u.nval);
+      e->u.info = numberK(e->u.nval);
       e->k = VK;
     }
     /* FALLTHROUGH */
@@ -751,7 +743,7 @@ int FuncState::jumponcond (expdesc *e, int cond) {
     }
     /* else go through */
   }
-  discharge2anyreg(this, e);
+  discharge2anyreg(e);
   freeexp(e);
   return condjump(OP_TESTSET, NO_REG, e->u.info, cond);
 }
@@ -829,9 +821,9 @@ void FuncState::codenot (expdesc *e) {
     }
     case VRELOCABLE:
     case VNONRELOC: {
-      discharge2anyreg(this, e);
+      discharge2anyreg(e);
       freeexp(e);
-      e->u.info = luaK_codeABC(this, OP_NOT, 0, e->u.info, 0);
+      e->u.info = codeABC(OP_NOT, 0, e->u.info, 0);
       e->k = VRELOCABLE;
       break;
     }

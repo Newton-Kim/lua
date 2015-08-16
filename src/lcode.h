@@ -80,6 +80,8 @@ class FuncState {
   void freeexp (expdesc *e);
   void codeexpval (OpCode op, expdesc *e1, expdesc *e2, int line);
   int constfolding (int op, expdesc *e1, expdesc *e2);
+  void discharge2reg (expdesc *e, int reg);
+  void discharge2anyreg (expdesc *e);
 
  public:
   void nil (int from, int n);
@@ -92,7 +94,6 @@ class FuncState {
   void patchlist (int list, int target);
   void patchclose (int list, int level);
   void concat (int *l1, int l2);
-  int luaK_code (Instruction i); //supposed to be removed
   void exp2nextreg (expdesc *e);
   int exp2anyreg (expdesc *e);
   void storevar (expdesc *var, expdesc *ex);
@@ -106,7 +107,6 @@ class FuncState {
   void reserveregs (int n);
   int stringK (TString *s);
   int intK (lua_Integer n);
-  int luaK_numberK (lua_Number r); //supposed to be removed
   int exp2RK (expdesc *e);
   void setreturns (expdesc *e, int nresults);
   void setoneret (expdesc *e);
